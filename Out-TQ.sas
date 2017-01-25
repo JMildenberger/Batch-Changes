@@ -136,11 +136,60 @@ proc sql;
 	on				(a.IndustryID=f.IndustryID) and (a.CensusPeriodID=f.CensusPeriodID)and f.YearNo=6;
 quit;
 
+
+
+/*	Setting all sectoral value of production series equal to AnnVP (T36) 
+	T21=Sect5dVal, T22=Sect4dVal, T23=Sect3dVal, T24=SectScVal*/
+%macro SectVal;
+%do i = 21 %to 24;
+Proc sql;
+	Create table 	work.SectValT&i as
+	Select			IndustryID, "T&i" as DataSeriesID, YearID, YearNo, CensusPeriodID, Value
+	from 			work.AnnVP;
+quit;
+%end;
+
+Proc sql;
+	Create table 	work.SectVal as
+	%do b = 21 %to 23;
+	Select			* from work.SectValT&b union all
+	%end;
+	Select			* from work.SectValT24;
+quit;
+%mend SectVal;
+%SectVal;
+
+
+
+/*	Setting all sectoral output series equal to AnnOut (T37) 
+T11=Sect5dOut, T12=Sect4dOut, T13=Sect3dOut, T14=SectScOut */
+%macro SectOut;
+%do i = 11 %to 14;
+Proc sql;
+	Create table 	work.SectOutT&i as
+	Select			IndustryID, "T&i" as DataSeriesID, YearID, YearNo, CensusPeriodID, Value
+	from 			work.AnnOut;
+quit;
+%end;
+
+Proc sql;
+	Create table 	work.SectOut as
+	%do b = 11 %to 13;
+	Select			* from work.SectOutT&b union all
+	%end;
+	Select			* from work.SectOutT14;
+quit;
+%mend SectOut;
+%SectOut;
+
+
 /* Merging calculated variables together along with source data variables */
 proc sql;
 	Create table 	work.OUTTQFinalVars as
 	Select 			IndustryID, DataSeriesID, "0000" as DataArrayID, YearID, CensusPeriodID, Value 	from work.AnnVp union all
-	Select 			IndustryID, DataSeriesID, "0000" as DataArrayID, YearID, CensusPeriodID, Value 	from work.AnnOut
+	Select 			IndustryID, DataSeriesID, "0000" as DataArrayID, YearID, CensusPeriodID, Value 	from work.AnnOut union all
+	Select 			IndustryID, DataSeriesID, "0000" as DataArrayID, YearID, CensusPeriodID, Value 	from work.SectVal union all
+	Select 			IndustryID, DataSeriesID, "0000" as DataArrayID, YearID, CensusPeriodID, Value 	from work.SectOut
 	order by		IndustryID, DataSeriesID, DataArrayID, YearID;
 
 	Create table 	LPAll.LP_Append as
