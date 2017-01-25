@@ -27,17 +27,15 @@ run;
 Proc sql;
 	Create table	work.AssignAggMap as
 	Select			Distinct IndustryID, ArrayCodeIndustryID, DigitID, CensusPeriodID,
-					case	when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="5-Digit" then "T11"
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="4-Digit" then "T12"
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="3-Digit" then "T13" 
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID in ("2-Digit", "2-Sector") then "T14"
-							else "T37"
+					case	when DigitID="5-Digit" then "T11"
+							when DigitID="4-Digit" then "T12"
+							when DigitID="3-Digit" then "T13" 
+							when DigitID in ("2-Digit", "2-Sector") then "T14"
 					end as	OutDataSeriesID,
-					case	when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="5-Digit" then "T21"
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="4-Digit" then "T22"
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID="3-Digit" then "T23"
-							when Program not in ("Out-Rtl.sas", "Out-TQ.sas") and DigitID in ("2-Digit", "2-Sector") then "T24" 
-							else "T36"
+					case	DigitID="5-Digit" then "T21"
+							DigitID="4-Digit" then "T22"
+							DigitID="3-Digit" then "T23"
+							DigitID in ("2-Digit", "2-Sector") then "T24" 
 					end as	ValDataSeriesID
 	from			LPAll.AggregateConcordance
 	where			IndustrySeriesID="Output"
