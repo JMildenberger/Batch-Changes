@@ -597,8 +597,8 @@ Proc sql;
 
 
 /* Adjusting IntraSectoral source values for Nonemployer| IntraSectoral Source Value*SourceNonEmployerRatio |
-	XT08=IntSect1, XT09=IntSect2, XT10=IntSect3, XT11=IntSect4, XT12=IntSect5, XT13=IntSect6 |
-	T53=IntraSect5d, T54=IntraSect4d, T55=IntraSect3d, T56=IntraSectC1, T57=IntraSectC2, T58=IntraSectSc */
+	XT08=IntSect1, XT09=IntSect2, XT10=IntSect3, XT11=IntSect4|
+	T53=IntraSect5d, T54=IntraSect4d, T55=IntraSect3d, T58=IntraSectSc */
 
 	Create table  	work.IntraSect as 
     Select          a.IndustryID, a.CensusPeriodID, a.YearID, a.YearNo,(a.Value*b.Value) as Value,
@@ -606,19 +606,17 @@ Proc sql;
 							when a.DataSeriesID="XT09" then "T54"
 							when a.DataSeriesID="XT10" then "T55"
 							when a.DataSeriesID="XT11" then "T58"
-							when a.DataSeriesID="XT12" then "T56"
-							when a.DataSeriesID="XT13" then "T57"
 					end		as DataSeriesID	
     from 	     	work.IPS_SourceData a
 	inner join 		work.SourceNonEmployerRatio b
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID)and (a.YearID=b.YearID) and 
 					(a.YearNo=b.YearNo) and (a.DataSeriesID = "XT08" or a.DataSeriesID = "XT09" or 
-					a.DataSeriesID = "XT10" or a.DataSeriesID = "XT11" or a.DataSeriesID = "XT12" or a.DataSeriesID = "XT13");
+					a.DataSeriesID = "XT10" or a.DataSeriesID = "XT11");
 
 
 /*	Removing intrasectoral shipments from AnnVP to calculate sectoral production values | AnnVP - IntraSect |
-	T53=IntraSect5d, T54=IntraSect4d, T55=IntraSect3d, T56=IntraSectC1, T57=IntraSectC2, T58=IntraSectSc 
-	T21=Sect5dVal, T22=Sect4dVal, T23=Sect3dVal, T24=SectScVal, T25=SectC1CVal, T26SectC2Val= */
+	T53=IntraSect5d, T54=IntraSect4d, T55=IntraSect3d, T58=IntraSectSc 
+	T21=Sect5dVal, T22=Sect4dVal, T23=Sect3dVal, T24=SectScVal */
 
 	Create table  	work.SectVal as 
     Select          a.IndustryID, a.CensusPeriodID, a.YearID, a.YearNo,(b.value-a.Value) as Value,
@@ -626,8 +624,6 @@ Proc sql;
 							when a.DataSeriesID="T54" then "T22"
 							when a.DataSeriesID="T55" then "T23"
 							when a.DataSeriesID="T58" then "T24"
-							when a.DataSeriesID="T56" then "T25"
-							when a.DataSeriesID="T57" then "T26"
 					end		as DataSeriesID						
     from 	     	work.IntraSect a
 	inner join		work.AnnVP b
@@ -716,7 +712,7 @@ Proc sql;
 
 /* 	Calculating Sectoral Output Indexes | SectoralConstantProductionIndex, OutAdRat |
 	SectoralConstantProductionIndex * OutAdRat |
-	T11=Sect5dOut, T12=Sect4dOut, T13=Sect3dOut, T14=SectScOut, T15=SectC1COut, T16=SectC2Out */
+	T11=Sect5dOut, T12=Sect4dOut, T13=Sect3dOut, T14=SectScOut */
 
 	Create table  	work.SectOut as 
     Select          a.IndustryID, a.CensusPeriodID, a.YearID, a.YearNo,(a.Value*b.Value) as Value,
@@ -724,8 +720,6 @@ Proc sql;
 							when a.DataSeriesID="T54" then "T12"
 							when a.DataSeriesID="T55" then "T13"
 							when a.DataSeriesID="T58" then "T14"
-							when a.DataSeriesID="T56" then "T15"
-							when a.DataSeriesID="T57" then "T16"
 					end		as DataSeriesID						
     from 	     	work.SectoralConstantProductionIndex a
 	inner join		work.OutAdRat b

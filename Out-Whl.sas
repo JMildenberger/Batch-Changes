@@ -402,9 +402,7 @@ quit;
 /*Intra-Sectoral Shipments  | XT08=IntSect1 (Table_3_IntraSect_5Digit)| XT08 = T53
 							  XT09=IntSect2 (Table_3_IntraSect_4Digit)| XT09 = T54
 							  XT10=IntSect3 (Table_3_IntraSect_3Digit)| XT10 = T55
-							  XT11=IntSect4 (Table_3_IntraSect_Sector)| XT11 = T58
-							  XT12=IntSect5 (Table_3_IntraSect_Combo1)| XT12 = T56
-							  XT13=IntSect6 (Table_3_IntraSect_Combo2)| XT13 = T57            */
+							  XT11=IntSect4 (Table_3_IntraSect_Sector)| XT11 = T58          */
 Proc sql;
 	Create table  	work.IntraSect5d as 
     Select          IndustryID, CensusPeriodID, "T53" as DataSeriesID, YearID, YearNo, Value
@@ -426,23 +424,11 @@ Proc sql;
     from 	     	work.IPS_SourceData 
     where	 		DataSeriesID="XT11";
 
-	Create table  	work.IntraSectC1 as 
-    Select          IndustryID, CensusPeriodID, "T56" as DataSeriesID, YearID, YearNo, Value
-    from 	     	work.IPS_SourceData 
-    where	 		DataSeriesID="XT12";
-
-	Create table  	work.IntraSectC2 as 
-    Select          IndustryID, CensusPeriodID, "T57" as DataSeriesID, YearID, YearNo, Value
-    from 	     	work.IPS_SourceData 
-    where	 		DataSeriesID="XT13";
-
 	Create table 	work.IntraSect as
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSect5d union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSect4d union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSect3d union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSectSc union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSectC1 union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSectC2
+	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.IntraSectSc
 	order by		IndustryID, DataSeriesID, YearID;
 quit; 
 
@@ -468,9 +454,7 @@ quit;
 /* Calculate Intra-Sectoral Shipments (Constant $) | IntraSect5d, CombPriceDfl |  (IntraSect5d / CombPriceDfl)*100
 										 		     IntraSect4d, CombPriceDfl |  (IntraSect4d / CombPriceDfl)*100
 											 	     IntraSect3d, CombPriceDfl |  (IntraSect3d / CombPriceDfl)*100
-											 	     IntraSectSc, CombPriceDfl |  (IntraSectSc / CombPriceDfl)*100
-											         IntraSectC1, CombPriceDfl |  (IntraSectC1 / CombPriceDfl)*100
-												     IntraSectC2, CombPriceDfl |  (IntraSectC2 / CombPriceDfl)*100                        	*/
+											 	     IntraSectSc, CombPriceDfl |  (IntraSectSc / CombPriceDfl)*100                       	*/
 Proc sql;
 	Create table  	work.IntraSect5d_cons as 
     Select          a.IndustryID, a.CensusPeriodID, "IntraSect5d_cons" as DataSeries, a.YearID, a.YearNo, (a.Value / b.Value)*100 as Value
@@ -499,28 +483,12 @@ Proc sql;
 	inner join		work.CombPriceDfl b
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
 					(a.YearNo=b.YearNo);
-
-	Create table  	work.IntraSectC1_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "IntraSectC1_cons" as DataSeries, a.YearID, a.YearNo, (a.Value / b.Value)*100 as Value
-    from 	     	work.IntraSectC1 a
-	inner join		work.CombPriceDfl b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
-	Create table  	work.IntraSectC2_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "IntraSectC2_cons" as DataSeries, a.YearID, a.YearNo, (a.Value / b.Value)*100 as Value
-    from 	     	work.IntraSectC2 a
-	inner join		work.CombPriceDfl b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
 quit;
 
 /*Calculate Sectoral Production (Constant $) | Sum(ConstDollarProd), IntraSect5d_cons |  Sum(ConstDollarProd) - IntraSect5d_cons
 										       Sum(ConstDollarProd), IntraSect4d_cons |  Sum(ConstDollarProd) - IntraSect4d_cons
 											   Sum(ConstDollarProd), IntraSect3d_cons |  Sum(ConstDollarProd) - IntraSect3d_cons
-											   Sum(ConstDollarProd), IntraSectSc_cons |  Sum(ConstDollarProd) - IntraSectSc_cons
-											   Sum(ConstDollarProd), IntraSectC1_cons |  Sum(ConstDollarProd) - IntraSectC1_cons
-											   Sum(ConstDollarProd), IntraSectC2_cons |  Sum(ConstDollarProd) - IntraSectC2_cons 	*/
+											   Sum(ConstDollarProd), IntraSectSc_cons |  Sum(ConstDollarProd) - IntraSectSc_cons 	*/
 Proc sql;
 	Create table  	work.Sect5d_cons as 
     Select          a.IndustryID, a.CensusPeriodID, "Sect5d_cons" as DataSeries, a.YearID, a.YearNo, (a.Value - b.Value) as Value
@@ -557,33 +525,13 @@ Proc sql;
 	inner join		work.IntraSectSc_cons b
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
 					(a.YearNo=b.YearNo);
-
-	Create table  	work.SectC1_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "SectC1_cons" as DataSeries, a.YearID, a.YearNo, (a.Value - b.Value) as Value
-	from    	    (Select 	IndustryID, CensusPeriodID, YearID, YearNo, sum(Value) as Value 
-					from 		work.ConstDollarProd
-					group by 	IndustryID, CensusPeriodID, YearID, YearNo) a
-	inner join		work.IntraSectC1_cons b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
-	Create table  	work.SectC2_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "SectC2_cons" as DataSeries, a.YearID, a.YearNo, (a.Value - b.Value) as Value
-	from    	    (Select 	IndustryID, CensusPeriodID, YearID, YearNo, sum(Value) as Value 
-					from 		work.ConstDollarProd
-					group by 	IndustryID, CensusPeriodID, YearID, YearNo) a
-	inner join		work.IntraSectC2_cons b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
 quit;
 
 
 /* Calculate Sectoral Production Index  (Constant $) | Sect5d_cons | Calculate Index of Sect5d_cons
 													   Sect4d_cons | Calculate Index of Sect4d_cons
 										   			   Sect3d_cons | Calculate Index of Sect3d_cons
-													   SectSc_cons | Calculate Index of SectSc_cons
-													   SectC1_cons | Calculate Index of SectC1_cons
-													   SectC2_cons | Calculate Index of SectC2_cons	                                        */
+													   SectSc_cons | Calculate Index of SectSc_cons */
 Proc sql;
 	Create table  	work.Index_Sect5d_cons as 
     Select          a.IndustryID, a.CensusPeriodID, "Index_Sect5d_cons" as DataSeries, a.YearID, a.YearNo, (a.Value/b.Value*100) as Value
@@ -612,20 +560,6 @@ Proc sql;
 	inner join		work.SectSc_cons b
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and 
 					b.YearNo=1;
-
-	Create table  	work.Index_SectC1_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "Index_SectC1_cons" as DataSeries, a.YearID, a.YearNo, (a.Value/b.Value*100) as Value
-    from 	     	work.SectC1_cons a
-	inner join		work.SectC1_cons b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and  
-					b.YearNo=1;
-
-	Create table  	work.Index_SectC2_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "Index_SectC2_cons" as DataSeries, a.YearID, a.YearNo, (a.Value/b.Value*100) as Value
-    from 	     	work.SectC2_cons a
-	inner join		work.SectC2_cons b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and
-					b.YearNo=1;
 quit;
 
 
@@ -653,15 +587,13 @@ quit;
 
 
 /*************************************/
-/**Sectoral Output Index (T11-T16)****/
+/**Sectoral Output Index (T11-T14)****/
 /*************************************/
 	
-/*Calculate Sectoral Output	Index (T11-T16)  |   Index_Sect5d_cons, OutAdRat (output weighting effect) | Index_Sect5d_cons * OutAdRat
+/*Calculate Sectoral Output	Index (T11-T14)  |   Index_Sect5d_cons, OutAdRat (output weighting effect) | Index_Sect5d_cons * OutAdRat
 											     Index_Sect4d_cons, OutAdRat (output weighting effect) | Index_Sect4d_cons * OutAdRat
 											     Index_Sect3d_cons, OutAdRat (output weighting effect) | Index_Sect3d_cons * OutAdRat
-									        	 Index_SectSc_cons, OutAdRat (output weighting effect) | Index_SectSc_cons * OutAdRat
-												 Index_SectC1_cons, OutAdRat (output weighting effect) | Index_SectC1_cons * OutAdRat
-												 Index_SectC2_cons, OutAdRat (output weighting effect) | Index_SectC2_cons * OutAdRat	                */
+									        	 Index_SectSc_cons, OutAdRat (output weighting effect) | Index_SectSc_cons * OutAdRat	                */
 Proc sql;
 	Create table  	work.OutIndex_Sect5d_cons as 
     Select          a.IndustryID, a.CensusPeriodID, "T11" as DataSeriesID, a.YearID, a.YearNo, (a.Value * b.Value) as Value
@@ -691,41 +623,23 @@ Proc sql;
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
 					(a.YearNo=b.YearNo);
 
-	Create table  	work.OutIndex_SectC1_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "T15" as DataSeriesID, a.YearID, a.YearNo, (a.Value * b.Value) as Value
-    from 	     	work.Index_SectC1_cons a
-	inner join		work.OutAdRat b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
-	Create table  	work.OutIndex_SectC2_cons as 
-    Select          a.IndustryID, a.CensusPeriodID, "T16" as DataSeriesID, a.YearID, a.YearNo, (a.Value * b.Value) as Value
-    from 	     	work.Index_SectC2_cons a
-	inner join		work.OutAdRat b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
 	Create table 	work.SectOut as
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_Sect5d_cons union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_Sect4d_cons union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_Sect3d_cons union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_SectSc_cons union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_SectC1_cons union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_SectC2_cons
+	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.OutIndex_SectSc_cons
 	order by		IndustryID, DataSeriesID, YearID;
 quit;
 
 
 /*******************************************/
-/*Sectoral Production (Current $) (T21-T26)*/
+/*Sectoral Production (Current $) (T21-T24)*/
 /*******************************************/
 
-/*Calculate Sectoral Production (Current $) (T21-T26)  |  AnnVp, IntraSect5D |  AnnVP - IntraSect5D
+/*Calculate Sectoral Production (Current $) (T21-T24)  |  AnnVp, IntraSect5D |  AnnVP - IntraSect5D
 											              AnnVp, IntraSect4D |  AnnVP - IntraSect4D
 											              AnnVp, IntraSect3D |  AnnVP - IntraSect3D
-									        	          AnnVp, IntraSectSc |  AnnVP - IntraSectSc
-												          AnnVp, IntraSectC1 |  AnnVP - IntraSectC1
-												          AnnVp, IntraSectC2 |  AnnVP - IntraSectC2	                */
+									        	          AnnVp, IntraSectSc |  AnnVP - IntraSectSc             */
 Proc sql;
 	Create table  	work.Sect5d as 
     Select          a.IndustryID, a.CensusPeriodID, "T21" as DataSeriesID, a.YearID, a.YearNo, (a.Value - b.Value) as Value
@@ -755,27 +669,11 @@ Proc sql;
     on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
 					(a.YearNo=b.YearNo);
 
-	Create table  	work.SectC1 as 
-    Select          a.IndustryID, a.CensusPeriodID, "T25" as DataSeriesID, a.YearID, a.YearNo, (a.Value - b.Value) as Value
-     from 	     	work.AnnVP a
-	inner join		work.IntraSectC1 b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
-	Create table  	work.SectC2 as 
-    Select          a.IndustryID, a.CensusPeriodID, "T26" as DataSeriesID, a.YearID, a.YearNo, (a.Value - b.Value) as Value
-     from 	     	work.AnnVP a
-	inner join		work.IntraSectC2 b
-    on	 			(a.IndustryID=b.IndustryID) and (a.CensusPeriodID=b.CensusPeriodID) and (a.YearID=b.YearID) and 
-					(a.YearNo=b.YearNo);
-
 	Create table 	work.SectVal as
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.Sect5d union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.Sect4d union all
 	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.Sect3d union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.SectSc union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.SectC1 union all
-	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.SectC2
+	Select 			IndustryID, CensusPeriodID, DataSeriesID, YearID, YearNo, Value 	from work.SectSc
 	order by		IndustryID, DataSeriesID, YearID;
 quit;
 
